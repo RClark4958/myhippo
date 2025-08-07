@@ -1,0 +1,40 @@
+name = "myhippo-transcription"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# Bindings for R2 buckets
+[[r2_buckets]]
+binding = "AUDIO_BUCKET"
+bucket_name = "myhippo-audio-files"
+
+[[r2_buckets]]
+binding = "TRANSCRIPTION_BUCKET"
+bucket_name = "myhippo-transcriptions"
+
+# Bindings for D1 database (for tracking jobs)
+[[d1_databases]]
+binding = "DB"
+database_name = "myhippo-transcriptions"
+database_id = "YOUR_DATABASE_ID"
+
+# Bindings for Queues
+[[queues.producers]]
+binding = "TRANSCRIPTION_QUEUE"
+queue = "transcription-jobs"
+
+[[queues.consumers]]
+queue = "transcription-jobs"
+max_batch_size = 10
+max_batch_timeout = 30
+
+# Environment variables (set these in dashboard or with wrangler secret)
+[vars]
+DEEPGRAM_API_URL = "https://api.deepgram.com/v1/listen"
+ENABLE_DIARIZATION = "true"
+TRANSCRIPTION_MODEL = "nova-2"
+LANGUAGE = "en"
+
+# KV namespace for caching and state
+[[kv_namespaces]]
+binding = "CACHE"
+id = "YOUR_KV_NAMESPACE_ID"

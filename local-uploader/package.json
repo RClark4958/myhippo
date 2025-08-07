@@ -1,0 +1,19 @@
+{
+  "name": "myhippo-audio-uploader",
+  "version": "1.0.0",
+  "description": "Local audio file watcher and uploader to Cloudflare R2",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.515.0",
+    "@aws-sdk/lib-storage": "^3.515.0",
+    "chokidar": "^3.6.0",
+    "dotenv": "^16.4.1",
+    "p-queue": "^8.0.1",
+    "winston": "^3.11.0"
+  }
+}

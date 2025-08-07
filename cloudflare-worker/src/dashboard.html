@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyHippo Transcription Dashboard</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #333;
+        }
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        .jobs-table {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        th {
+            background: #f8f8f8;
+            font-weight: 600;
+        }
+        .status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        .status-completed { background: #d4edda; color: #155724; }
+        .status-processing { background: #cce5ff; color: #004085; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-failed { background: #f8d7da; color: #721c24; }
+        .refresh-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .refresh-btn:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MyHippo Transcription Dashboard</h1>
+        
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="todayFiles">-</div>
+                <div class="stat-label">Files Today</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="todayMinutes">-</div>
+                <div class="stat-label">Minutes Transcribed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="todayCost">-</div>
+                <div class="stat-label">Cost Today</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="successRate">-</div>
+                <div class="stat-label">Success Rate</div>
+            </div>
+        </div>
+        
+        <button class="refresh-btn" onclick="loadDashboard()">Refresh</button>
+        
+        <h2>Recent Transcription Jobs</h2>
+        <div class="jobs-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Job ID</th>
+                        <th>Audio File</th>
+                        <th>Status</th>
+                        <th>Duration</th>
+                        <th>Words</th>
+                        <th>Cost</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="jobsTable">
+                    <tr><td colspan="8">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        async function loadDashboard() {
+            try {
+                // Load today's stats
+                const statsResponse = await fetch('/api/stats/today');
+                const stats = await statsResponse.json();
+                
+                document.getElementById('todayFiles').textContent = stats.fileCount || 0;
+                document.getElementById('todayMinutes').textContent = 
+                    stats.totalMinutes ? stats.totalMinutes.toFixed(1) : '0';
+                document.getElementById('todayCost').textContent = 
+                    stats.totalCost ? `$${stats.totalCost.toFixed(2)}` : '$0.00';
+                document.getElementById('successRate').textContent = 
+                    stats.successRate ? `${stats.successRate.toFixed(1)}%` : '0%';
+                
+                // Load recent jobs
+                const jobsResponse = await fetch('/api/jobs/recent');
+                const jobs = await jobsResponse.json();
+                
+                const tbody = document.getElementById('jobsTable');
+                tbody.innerHTML = jobs.map(job => `
+                    <tr>
+                        <td>${job.id.substring(0, 8)}...</td>
+                        <td>${job.audio_key.split('/').pop()}</td>
+                        <td><span class="status status-${job.status}">${job.status}</span></td>
+                        <td>${job.duration_seconds ? `${Math.round(job.duration_seconds)}s` : '-'}</td>
+                        <td>${job.word_count || '-'}</td>
+                        <td>${job.cost_cents ? `$${(job.cost_cents/100).toFixed(2)}` : '-'}</td>
+                        <td>${new Date(job.created_at).toLocaleString()}</td>
+                        <td>
+                            ${job.status === 'completed' ? 
+                                `<a href="/api/result/${job.id}" target="_blank">View</a>` : 
+                                '-'
+                            }
+                        </td>
+                    </tr>
+                `).join('') || '<tr><td colspan="8">No jobs found</td></tr>';
+                
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                alert('Error loading dashboard data');
+            }
+        }
+        
+        // Load on page load
+        loadDashboard();
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadDashboard, 30000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "myhippo-transcription-worker",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker for automated Deepgram transcription",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "create-db": "wrangler d1 create myhippo-transcriptions",
+    "init-db": "wrangler d1 execute myhippo-transcriptions --file=./schema.sql"
+  },
+  "devDependencies": {
+    "wrangler": "^3.28.2"
+  },
+  "dependencies": {
+    "@cloudflare/workers-types": "^4.20240117.0"
+  }
+}
